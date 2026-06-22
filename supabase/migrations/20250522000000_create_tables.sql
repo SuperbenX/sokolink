@@ -12,7 +12,9 @@ CREATE TABLE profiles (
   instagram_handle TEXT,
   tiktok_handle TEXT,
   facebook_handle TEXT,
-  follower_count INT,
+  follower_count TEXT,
+  platform TEXT,
+  niche TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'suspended')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
