@@ -31,7 +31,15 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/dashboard")
+    // Redirect admin users to /admin, influencers to /dashboard
+    const supabase2 = createClient()
+    const { data: profile } = await supabase2
+      .from("profiles")
+      .select("role")
+      .eq("id", (await supabase.auth.getUser()).data.user?.id)
+      .single()
+
+    router.push(profile?.role === "admin" ? "/admin" : "/dashboard")
     router.refresh()
   }
 
