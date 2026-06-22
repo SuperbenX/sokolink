@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-const statuses = ["pending", "shipped", "delivered", "cancelled"]
+const statuses = ["new", "paid", "shipped", "delivered", "cancelled"]
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([])

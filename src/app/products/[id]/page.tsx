@@ -1,8 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-import { SampleRequestForm } from "@/components/products/SampleRequestForm"
-import { CommissionCalculator } from "@/components/products/CommissionCalculator"
 import { ShareButtons } from "@/components/products/ShareButtons"
 import { getProductById } from "@/lib/supabase/queries"
 
@@ -19,8 +17,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const shareUrl = `https://sokolink.vercel.app/products/${product.id}`
-  const shareText = `Check out ${product.name} on SokoLink! Earn ${(product.commission_rate * 100).toFixed(0)}% commission promoting this product.`
+  const wholesale = product.wholesale_price || product.price_usd
+  const shareUrl = `https://sokolink-x.vercel.app/products/${product.id}`
+  const shareText = `Check out ${product.name} on SokoLink! Wholesale from $${wholesale.toFixed(2)}.`
 
   return (
     <div className="px-6 py-24">
@@ -42,20 +41,27 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <span className="text-sm text-[#2DD4BF]">{product.category}</span>
             <h1 className="mt-2 text-3xl font-light tracking-[-0.64px] text-white">{product.name}</h1>
             <p className="mt-4 text-base leading-relaxed text-white/60">{product.description}</p>
-            <div className="mt-6 flex items-center gap-4">
-              <span className="text-3xl font-light text-white">${Number(product.price_usd).toFixed(2)}</span>
-              <span className="rounded-full bg-[#2DD4BF]/10 px-4 py-1.5 text-sm text-[#2DD4BF]">
-                {(product.commission_rate * 100).toFixed(0)}% commission
-              </span>
-            </div>
-            <div className="mt-6">
-              <p className="text-sm text-white/40">Stock: {product.stock} units</p>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <p className="text-xs text-white/40">WHOLESALE PRICE</p>
+                  <p className="mt-1 text-3xl font-light text-[#2DD4BF]">${wholesale.toFixed(2)}</p>
+                </div>
+                {product.wholesale_price && (
+                  <div className="text-right">
+                    <p className="text-xs text-white/40">RETAIL PRICE</p>
+                    <p className="mt-1 text-lg text-white/40 line-through">${Number(product.price_usd).toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-8 space-y-6">
-              <CommissionCalculator priceUsd={Number(product.price_usd)} commissionRate={product.commission_rate} />
+            <div className="mt-6 space-y-4">
+              <p className="text-sm text-white/30">
+                Wholesale pricing for resellers. Contact us via WhatsApp to place an order or visit our warehouse for pickup.
+              </p>
               <ShareButtons url={shareUrl} text={shareText} productName={product.name} />
-              <SampleRequestForm productId={product.id} productName={product.name} />
             </div>
           </div>
         </div>

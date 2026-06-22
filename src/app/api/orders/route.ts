@@ -1,35 +1,38 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const { data } = await supabase.from("orders").select("*, products(name)").eq("influencer_id", user.id).order("created_at", { ascending: false })
+  const svc = createServiceClient()
+  const { data } = await svc.from("orders").select("*, products(name)").order("created_at", { ascending: false })
   return NextResponse.json(data || [])
 }
 
 export async function POST(req: Request) {
   const body = await req.json()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const svc = createServiceClient()
 
-  const { data: product } = await supabase.from("products").select("price_usd, commission_rate").eq("id", body.product_id).single()
+  // Get product wholesale price
+  const { data: product } = await svc.from("products").select("wholesale_price, price_usd").eq("id", body.product_id).single()
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 })
 
-  const totalAmount = Number(product.price_usd) * body.quantity
-  const commissionAmount = totalAmount * Number(product.commission_rate)
+  const unitPrice = product.wholesale_price || product.price_usd
+  const qty = parseInt(body.quantity) || 1
+  const total = unitPrice * qty
 
-  const { data: order, error } = await supabase.from("orders").insert({
-    influencer_id: user.id, product_id: body.product_id,
-    quantity: body.quantity, total_amount: totalAmount,
-    commission_amount: commissionAmount,
-    customer_name: body.customer_name, customer_phone: body.customer_phone, delivery_address: body.delivery_address,
+  const { data: profile } = await svc.from("profiles").select("id").eq("email", body.email).maybeSingle()
+  const influencerId = profile?.id || null
+
+  const { data, error } = await svc.from("orders").insert({
+    influencer_id: influencerId,
+    product_id: body.product_id,
+    quantity: qty,
+    total_amount: total,
+    status: "new",
+    customer_name: body.customer_name || "Walk-in",
+    customer_phone: body.customer_phone || null,
+    delivery_address: body.delivery_address || null,
   }).select().single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-
-  await supabase.from("commissions").insert({ order_id: order.id, influencer_id: user.id, amount: commissionAmount })
-  return NextResponse.json({ success: true, order })
+  return NextResponse.json(data)
 }

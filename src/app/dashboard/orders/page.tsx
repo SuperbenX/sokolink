@@ -8,30 +8,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
 
-interface Order {
-  id: string; products: { name: string } | null
-  quantity: number; total_amount: number; commission_amount: number
-  status: string; customer_name: string; created_at: string
+interface Product {
+  id: string; name: string
+  price_usd: number; wholesale_price: number | null
 }
 
-const products = [
-  { id: "1", name: "Portable Power Station 500W" },
-  { id: "2", name: "LED Rechargeable Camping Lantern" },
-  { id: "3", name: "Premium Sportswear Set" },
-  { id: "4", name: "Wireless Bluetooth Earbuds Pro" },
-  { id: "5", name: "Solar LED Flood Light 200W" },
-  { id: "6", name: "Casual Streetwear Hoodie" },
-]
-
 export default function DashboardOrders() {
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<any[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({ product_id: "", quantity: "1", customer_name: "", customer_phone: "", delivery_address: "" })
+  const [form, setForm] = useState({ product_id: "", quantity: "1", customer_name: "" })
   const [sending, setSending] = useState(false)
 
   useEffect(() => {
     fetch("/api/orders").then(r => r.json()).then(setOrders).catch(() => {})
+    fetch("/api/products").then(r => r.json()).then(setProducts).catch(() => {})
   }, [])
+
+  const selectedProduct = products.find(p => p.id === form.product_id)
+  const unitPrice = selectedProduct?.wholesale_price || selectedProduct?.price_usd || 0
+  const totalAmount = unitPrice * parseInt(form.quantity || "1")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,17 +36,16 @@ export default function DashboardOrders() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, quantity: parseInt(form.quantity) }),
+        body: JSON.stringify(form),
       })
-      const data = await res.json()
-      if (data.success) {
-        toast.success("Order created! We'll process it shortly.")
+      if (res.ok) {
+        toast.success("Order placed! Pay via bank transfer or visit our warehouse.")
         setOpen(false)
-        setForm({ product_id: "", quantity: "1", customer_name: "", customer_phone: "", delivery_address: "" })
-        // Refresh orders
+        setForm({ product_id: "", quantity: "1", customer_name: "" })
         fetch("/api/orders").then(r => r.json()).then(setOrders).catch(() => {})
       } else {
-        toast.error(data.error || "Error creating order")
+        const data = await res.json()
+        toast.error(data.error || "Error")
       }
     } catch { toast.error("Network error") }
     setSending(false)
@@ -61,7 +56,7 @@ export default function DashboardOrders() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-light text-white">My Orders</h1>
-          <p className="mt-1 text-sm text-white/40">Track and create customer orders.</p>
+          <p className="mt-1 text-sm text-white/40">Place orders for products you want to sell.</p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger>
@@ -70,7 +65,7 @@ export default function DashboardOrders() {
             </span>
           </DialogTrigger>
           <DialogContent className="border-white/10 bg-[#121216] text-white sm:max-w-lg">
-            <DialogHeader><DialogTitle className="text-white">Create Order</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle className="text-white">Place Order</DialogTitle></DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label className="text-sm text-white/60">Product *</Label>
@@ -90,29 +85,22 @@ export default function DashboardOrders() {
                     className="mt-1.5 border-white/10 bg-white/5 text-white" />
                 </div>
                 <div>
-                  <Label className="text-sm text-white/60">Customer Name *</Label>
+                  <Label className="text-sm text-white/60">Your Name</Label>
                   <Input value={form.customer_name}
                     onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                     required className="mt-1.5 border-white/10 bg-white/5 text-white" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-white/60">Customer Phone</Label>
-                  <Input value={form.customer_phone}
-                    onChange={(e) => setForm({ ...form, customer_phone: e.target.value })}
-                    className="mt-1.5 border-white/10 bg-white/5 text-white" />
+              {selectedProduct && (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs text-white/40">AMOUNT DUE</p>
+                  <p className="mt-1 text-2xl font-light text-[#2DD4BF]">${totalAmount.toFixed(2)}</p>
+                  <p className="mt-1 text-xs text-white/30">Pay via bank transfer or EcoCash. Visit warehouse for pickup or we ship after payment confirmation.</p>
                 </div>
-                <div>
-                  <Label className="text-sm text-white/60">Delivery Address</Label>
-                  <Input value={form.delivery_address}
-                    onChange={(e) => setForm({ ...form, delivery_address: e.target.value })}
-                    className="mt-1.5 border-white/10 bg-white/5 text-white" />
-                </div>
-              </div>
-              <Button type="submit" disabled={sending}
+              )}
+              <Button type="submit" disabled={sending || !form.product_id}
                 className="w-full rounded-full bg-[#2DD4BF] text-black hover:bg-[#5EEAD4]">
-                {sending ? "Creating..." : "Create Order"}
+                {sending ? "Placing Order..." : "Place Order"}
               </Button>
             </form>
           </DialogContent>
@@ -124,19 +112,17 @@ export default function DashboardOrders() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/5 bg-white/5">
-                {["Product", "Customer", "Qty", "Amount", "Commission", "Status"].map(h => (
+                {["Product", "Qty", "Total", "Status"].map(h => (
                   <th key={h} className="px-5 py-3 text-left font-medium text-white/40">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => (
+              {orders.map((o: any) => (
                 <tr key={o.id} className="border-b border-white/5 last:border-0">
                   <td className="px-5 py-3 text-white/80">{(o.products as any)?.name || "—"}</td>
-                  <td className="px-5 py-3 text-white/60">{o.customer_name}</td>
-                  <td className="px-5 py-3 text-white/80">{o.quantity}</td>
+                  <td className="px-5 py-3 text-white/60">{o.quantity}</td>
                   <td className="px-5 py-3 text-white/80">${Number(o.total_amount).toFixed(2)}</td>
-                  <td className="px-5 py-3 text-[#2DD4BF]">${Number(o.commission_amount).toFixed(2)}</td>
                   <td className="px-5 py-3">
                     <span className="rounded-full border border-white/10 px-2.5 py-0.5 text-xs text-white/40 capitalize">{o.status}</span>
                   </td>
@@ -146,7 +132,7 @@ export default function DashboardOrders() {
           </table>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-sm text-white/30">No orders yet. Click &quot;New Order&quot; to create one.</p>
+            <p className="text-sm text-white/30">No orders yet. Click "New Order" to place one.</p>
           </div>
         )}
       </div>

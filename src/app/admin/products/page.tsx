@@ -12,7 +12,8 @@ import { Plus, Pencil, Trash2 } from "lucide-react"
 
 interface Product {
   id: string; name: string; description: string; category: string
-  price_usd: number; commission_rate: number; stock: number; status: string
+  price_usd: number; wholesale_price: number | null
+  commission_rate: number; status: string
 }
 
 export default function AdminProducts() {
@@ -20,7 +21,10 @@ export default function AdminProducts() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [sending, setSending] = useState(false)
-  const [form, setForm] = useState({ name: "", description: "", category: "", price_usd: "", commission_rate: "", stock: "" })
+  const [form, setForm] = useState({
+    name: "", description: "", category: "",
+    retail_price: "", wholesale_price: "",
+  })
 
   const fetchProducts = () => {
     fetch("/api/admin/products").then(r => r.json()).then(setProducts).catch(() => {})
@@ -29,7 +33,7 @@ export default function AdminProducts() {
   useEffect(() => { fetchProducts() }, [])
 
   const resetForm = () => {
-    setForm({ name: "", description: "", category: "", price_usd: "", commission_rate: "", stock: "" })
+    setForm({ name: "", description: "", category: "", retail_price: "", wholesale_price: "" })
     setEditing(null)
   }
 
@@ -37,7 +41,8 @@ export default function AdminProducts() {
     setEditing(p)
     setForm({
       name: p.name, description: p.description, category: p.category,
-      price_usd: String(p.price_usd), commission_rate: String(p.commission_rate * 100), stock: String(p.stock),
+      retail_price: String(p.price_usd),
+      wholesale_price: p.wholesale_price ? String(p.wholesale_price) : "",
     })
     setOpen(true)
   }
@@ -46,13 +51,29 @@ export default function AdminProducts() {
     e.preventDefault()
     setSending(true)
     try {
-      const url = editing ? "/api/admin/products" : "/api/admin/products"
       const method = editing ? "PATCH" : "POST"
       const body = editing
-        ? { id: editing.id, fields: { name: form.name, description: form.description, category: form.category, price_usd: parseFloat(form.price_usd), commission_rate: parseFloat(form.commission_rate) / 100, stock: parseInt(form.stock) } }
-        : { name: form.name, description: form.description, category: form.category, price_usd: form.price_usd, commission_rate: (parseFloat(form.commission_rate) / 100).toString(), stock: form.stock }
+        ? {
+            id: editing.id,
+            fields: {
+              name: form.name,
+              description: form.description,
+              category: form.category,
+              price_usd: parseFloat(form.retail_price),
+              wholesale_price: form.wholesale_price ? parseFloat(form.wholesale_price) : null,
+              commission_rate: 0,
+            },
+          }
+        : {
+            name: form.name,
+            description: form.description,
+            category: form.category,
+            price_usd: form.retail_price,
+            wholesale_price: form.wholesale_price || null,
+            commission_rate: "0",
+          }
 
-      const res = await fetch(url, {
+      const res = await fetch("/api/admin/products", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -91,7 +112,7 @@ export default function AdminProducts() {
       body: JSON.stringify({ id: p.id, fields: { status: newStatus } }),
     })
     if (res.ok) {
-      toast.success(`${p.name} ${newStatus === "active" ? "activated" : "deactivated"}`)
+      toast.success(`${p.name} ${newStatus}`)
       fetchProducts()
     }
   }
@@ -137,24 +158,20 @@ export default function AdminProducts() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm text-white/60">Price (USD) *</Label>
-                  <Input type="number" step="0.01" value={form.price_usd}
-                    onChange={(e) => setForm({ ...form, price_usd: e.target.value })}
+                  <Label className="text-sm text-white/60">Wholesale Price (USD) *</Label>
+                  <p className="text-[10px] text-white/30 mb-1">What buyers pay you</p>
+                  <Input type="number" step="0.01" value={form.wholesale_price}
+                    onChange={(e) => setForm({ ...form, wholesale_price: e.target.value })}
                     required className="mt-1.5 border-white/10 bg-white/5 text-white" />
                 </div>
                 <div>
-                  <Label className="text-sm text-white/60">Commission % *</Label>
-                  <Input type="number" step="0.1" value={form.commission_rate}
-                    onChange={(e) => setForm({ ...form, commission_rate: e.target.value })}
-                    required className="mt-1.5 border-white/10 bg-white/5 text-white" />
-                </div>
-                <div>
-                  <Label className="text-sm text-white/60">Stock *</Label>
-                  <Input type="number" value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    required className="mt-1.5 border-white/10 bg-white/5 text-white" />
+                  <Label className="text-sm text-white/60">Retail Price (USD)</Label>
+                  <p className="text-[10px] text-white/30 mb-1">Suggested selling price</p>
+                  <Input type="number" step="0.01" value={form.retail_price}
+                    onChange={(e) => setForm({ ...form, retail_price: e.target.value })}
+                    className="mt-1.5 border-white/10 bg-white/5 text-white" />
                 </div>
               </div>
               <Button type="submit" disabled={sending}
@@ -171,7 +188,7 @@ export default function AdminProducts() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/5 bg-white/5">
-                {["Product", "Category", "Price", "Commission", "Stock", "Status", "Actions"].map((h) => (
+                {["Product", "Category", "Wholesale", "Retail", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left font-medium text-white/40">{h}</th>
                 ))}
               </tr>
@@ -181,9 +198,12 @@ export default function AdminProducts() {
                 <tr key={p.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.02]">
                   <td className="px-5 py-3 text-white/80">{p.name}</td>
                   <td className="px-5 py-3 text-white/40">{p.category}</td>
-                  <td className="px-5 py-3 text-white/80">${Number(p.price_usd).toFixed(2)}</td>
-                  <td className="px-5 py-3 text-[#2DD4BF]">{(p.commission_rate * 100).toFixed(1)}%</td>
-                  <td className="px-5 py-3 text-white/60">{p.stock}</td>
+                  <td className="px-5 py-3 text-[#2DD4BF]">
+                    ${(p.wholesale_price || p.price_usd).toFixed(2)}
+                  </td>
+                  <td className="px-5 py-3 text-white/60">
+                    ${Number(p.price_usd).toFixed(2)}
+                  </td>
                   <td className="px-5 py-3">
                     <button onClick={() => toggleStatus(p)}
                       className={`rounded-full px-2.5 py-0.5 text-xs border cursor-pointer ${

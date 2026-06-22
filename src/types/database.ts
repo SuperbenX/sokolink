@@ -23,6 +23,7 @@ export interface Product {
   description: string
   category: string
   price_usd: number
+  wholesale_price: number | null
   commission_rate: number
   images: string[]
   stock: number
@@ -36,8 +37,7 @@ export interface Order {
   product_id: string
   quantity: number
   total_amount: number
-  commission_amount: number
-  status: "pending" | "shipped" | "delivered" | "cancelled"
+  status: "new" | "paid" | "shipped" | "delivered" | "cancelled"
   customer_name: string
   customer_phone?: string
   delivery_address?: string

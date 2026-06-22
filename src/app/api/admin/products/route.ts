@@ -14,9 +14,10 @@ export async function POST(req: Request) {
     name: body.name,
     description: body.description,
     category: body.category,
-    price_usd: parseFloat(body.price_usd),
-    commission_rate: parseFloat(body.commission_rate),
-    stock: parseInt(body.stock) || 0,
+    price_usd: parseFloat(body.price_usd) || 0,
+    wholesale_price: body.wholesale_price ? parseFloat(body.wholesale_price) : null,
+    commission_rate: 0,
+    stock: 0,
     images: body.images || [],
     status: "active",
   }).select().single()
