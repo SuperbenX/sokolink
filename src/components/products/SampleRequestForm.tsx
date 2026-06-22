@@ -20,8 +20,19 @@ export function SampleRequestForm({ productId, productName }: SampleRequestFormP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    toast.success("Request submitted! We'll be in touch via WhatsApp.")
+    try {
+      const res = await fetch("/api/samples", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: productId, email: form.email, shipping_address: form.phone, notes: form.message + "\nName: " + form.name }),
+      })
+      if (res.ok) {
+        toast.success("Request submitted! We'll be in touch via WhatsApp.")
+      } else {
+        const data = await res.json()
+        toast.error(data.error || "Error submitting request")
+      }
+    } catch { toast.error("Network error") }
     setForm({ name: "", email: "", phone: "", message: "" })
     setOpen(false)
     setSending(false)

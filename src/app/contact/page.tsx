@@ -10,12 +10,24 @@ import { MessageCircle, Mail, MapPin } from "lucide-react"
 
 export default function ContactPage() {
   const [sending, setSending] = useState(false)
+  const [form, setForm] = useState({ name: "", email: "", message: "" })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    toast.success("Message sent! We'll get back to you soon.")
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      if (res.ok) {
+        toast.success("Message sent! We'll get back to you soon.")
+        setForm({ name: "", email: "", message: "" })
+      } else {
+        toast.error("Failed to send. Please try WhatsApp instead.")
+      }
+    } catch { toast.error("Network error") }
     setSending(false)
   }
 
@@ -69,15 +81,18 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <Label htmlFor="name" className="text-sm text-white/60">Name *</Label>
-                <Input id="name" required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="Your name" />
+                <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="Your name" />
               </div>
               <div>
                 <Label htmlFor="email" className="text-sm text-white/60">Email *</Label>
-                <Input id="email" type="email" required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="your@email.com" />
+                <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="your@email.com" />
               </div>
               <div>
                 <Label htmlFor="msg" className="text-sm text-white/60">Message *</Label>
-                <Textarea id="msg" required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="How can we help?" rows={5} />
+                <Textarea id="msg" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  required className="mt-1.5 border-white/10 bg-white/5 text-white" placeholder="How can we help?" rows={5} />
               </div>
               <Button type="submit" disabled={sending}
                 className="rounded-full bg-[#2DD4BF] text-black hover:bg-[#5EEAD4] w-full">

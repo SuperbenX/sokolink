@@ -28,7 +28,9 @@ export async function POST(req: Request) {
   await supabase.from("profiles").update({
     phone: body.phone || null,
     city: body.city || null,
-    follower_count: parseInt(body.followerCount) || null,
+    platform: body.platform || null,
+    niche: body.niche || null,
+    follower_count: body.followerCount || null,
   }).eq("id", auth.user.id)
 
   return NextResponse.json({
