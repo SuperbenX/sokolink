@@ -6,10 +6,10 @@ const footerLinks = {
     { href: "/contact", label: "Contact" },
     { href: "/how-it-works", label: "How It Works" },
   ],
-  "For Influencers": [
-    { href: "/apply", label: "Join Now" },
+  "Partnerships": [
+    { href: "/how-it-works", label: "How It Works" },
+    { href: "/apply", label: "Apply to Partner" },
     { href: "/products", label: "Browse Products" },
-    { href: "/how-it-works", label: "Commission Model" },
   ],
   Support: [
     { href: "/contact", label: "Help Center" },
@@ -27,7 +27,7 @@ export default function Footer() {
               Soko<span className="text-[#2DD4BF]">Link</span>
             </Link>
             <p className="mt-3 text-sm text-white/40 leading-relaxed max-w-xs">
-              Connecting African influencers with premium products. Your marketplace, your commission.
+              Connecting Southern Africa with premium global products. Wholesale & partnership.
             </p>
           </div>
           {Object.entries(footerLinks).map(([title, links]) => (

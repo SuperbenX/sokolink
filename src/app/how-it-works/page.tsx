@@ -1,48 +1,79 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Users, Package, TrendingUp, DollarSign } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Store, Users, ShoppingCart, CreditCard, Warehouse, Search, Handshake, Package, BarChart3 } from "lucide-react"
 
-const steps = [
-  {
-    icon: Users,
-    title: "1. Apply & Get Approved",
-    description: "Fill out our simple application form. Tell us about your niche, audience size, and platforms. Most applications are reviewed within 24 hours.",
-  },
-  {
-    icon: Package,
-    title: "2. Browse & Select Products",
-    description: "Access our curated catalog of premium products. Each product shows you the exact commission you'll earn. Request samples for products you want to promote.",
-  },
-  {
-    icon: TrendingUp,
-    title: "3. Promote Your Way",
-    description: "Share your unique referral links on TikTok, Instagram, Facebook, or WhatsApp. Create content that resonates with your audience.",
-  },
-  {
-    icon: DollarSign,
-    title: "4. Earn Commissions",
-    description: "Earn 10-25% commission on every sale through your links. Track your earnings in real-time through your dashboard. Get paid out regularly.",
-  },
+const tabs = [
+  { id: "wholesale", label: "Wholesale", icon: Store },
+  { id: "partnership", label: "Creator Partnership", icon: Users },
 ]
 
-const faqs = [
-  { q: "Who can join?", a: "Anyone with a social media presence in Southern Africa. Whether you have 1,000 or 100,000 followers, you can earn." },
-  { q: "How much can I earn?", a: "Commissions range from 10-25% per sale. An influencer selling 50 items at $30 with 15% commission earns $225." },
-  { q: "How do I get paid?", a: "Payouts are processed via mobile money (EcoCash), bank transfer, or WhatsApp-based payments." },
-  { q: "Do I need to handle shipping?", a: "No. We handle all inventory, packaging, and delivery. You just promote." },
-  { q: "Can I request samples?", a: "Yes! Active influencers can request product samples to review before promoting." },
+const wholesaleSteps = [
+  { icon: Search, title: "1. Browse Catalog", desc: "Explore our product catalog with wholesale prices. Use categories to find what fits your market." },
+  { icon: ShoppingCart, title: "2. Place an Order", desc: "Select products and quantities. No minimum order — buy what you need, when you need it." },
+  { icon: CreditCard, title: "3. Pay via Bank / EcoCash", desc: "We'll confirm your order and provide payment details. Pay via bank transfer, EcoCash, or cash on pickup." },
+  { icon: Warehouse, title: "4. Pickup or Delivery", desc: "Pick up from our Harare warehouse or arrange delivery. Same-day pickup available for in-stock items." },
+]
+
+const partnershipSteps = [
+  { icon: Users, title: "1. Apply to Partner", desc: "Fill out a simple application. Tell us about your platform, audience, and what kind of collaboration interests you." },
+  { icon: Handshake, title: "2. We Discuss the Terms", desc: "Whether you want affiliate commissions, a signed KOL contract, or another arrangement — we find a model that works for both sides." },
+  { icon: Package, title: "3. Access Products", desc: "Get access to our product catalog. Request samples, create content, and start selling or promoting." },
+  { icon: BarChart3, title: "4. Grow Together", desc: "We provide ongoing support, product updates, and flexible terms as your audience and sales grow." },
+]
+
+const wholesaleFaqs = [
+  { q: "What are your wholesale prices?", a: "Wholesale prices are listed on each product page. Contact us for bulk discounts on large orders." },
+  { q: "What payment methods do you accept?", a: "Bank transfer, EcoCash, and cash on pickup at our Harare warehouse." },
+  { q: "Is there a minimum order?", a: "No minimum order. Buy as little or as much as you need." },
+  { q: "Can I pick up from the warehouse?", a: "Yes. Our Harare warehouse is open for same-day pickup on in-stock items." },
+  { q: "Do you deliver?", a: "Yes, we can arrange delivery within Harare and surrounding areas. Contact us for delivery fees." },
+]
+
+const partnershipFaqs = [
+  { q: "Who can apply?", a: "Anyone with a social media presence in Southern Africa — TikTok, Instagram, Facebook, or WhatsApp. Followers of any size welcome." },
+  { q: "What kind of partnership models do you offer?", a: "We're flexible. Affiliate commissions, signed KOL agreements, product collaborations — let's discuss what works for you." },
+  { q: "Do I need to handle shipping?", a: "That depends on the model we agree on. For commission-based partnerships, we can handle fulfillment." },
+  { q: "Can I request samples?", a: "Yes. Active partners can request product samples to review and create content." },
 ]
 
 export default function HowItWorksPage() {
+  const [tab, setTab] = useState("wholesale")
+
+  const steps = tab === "wholesale" ? wholesaleSteps : partnershipSteps
+  const faqs = tab === "wholesale" ? wholesaleFaqs : partnershipFaqs
+
   return (
     <div className="px-6 py-24">
       <div className="mx-auto max-w-3xl text-center">
         <h1 className="text-4xl font-light tracking-[-0.64px] text-white">How It Works</h1>
-        <p className="mt-4 text-base text-white/40">Your path to earning commissions on your terms</p>
+        <p className="mt-4 text-base text-white/40">
+          Two ways to work with SokoLink — choose the path that fits your business.
+        </p>
       </div>
 
-      <div className="mx-auto mt-20 max-w-3xl">
-        <div className="space-y-16">
+      {/* Tabs */}
+      <div className="mx-auto mt-12 flex max-w-md justify-center rounded-2xl border border-white/5 bg-[#121216] p-1.5">
+        {tabs.map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all",
+              tab === t.id
+                ? "bg-[#2DD4BF] text-black"
+                : "text-white/40 hover:text-white/80",
+            )}>
+            <t.icon className="h-4 w-4" />
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Steps */}
+      <div className="mx-auto mt-16 max-w-3xl">
+        <div className="space-y-12">
           {steps.map((step, i) => (
             <div key={i} className="flex gap-6">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2DD4BF]/10">
@@ -50,15 +81,33 @@ export default function HowItWorksPage() {
               </div>
               <div>
                 <h3 className="text-xl font-medium text-white">{step.title}</h3>
-                <p className="mt-2 text-base leading-relaxed text-white/60">{step.description}</p>
+                <p className="mt-2 text-base leading-relaxed text-white/60">{step.desc}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
+      {/* CTA */}
+      <div className="mt-16 text-center">
+        {tab === "wholesale" ? (
+          <Link href="/products">
+            <Button className="h-12 rounded-full bg-[#2DD4BF] px-8 text-base font-medium text-black hover:bg-[#5EEAD4]">
+              Browse Products
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/apply">
+            <Button className="h-12 rounded-full bg-[#2DD4BF] px-8 text-base font-medium text-black hover:bg-[#5EEAD4]">
+              Apply to Partner
+            </Button>
+          </Link>
+        )}
+      </div>
+
+      {/* FAQ */}
       <div className="mx-auto mt-24 max-w-3xl">
-        <h2 className="text-2xl font-light text-white text-center">Frequently Asked Questions</h2>
+        <h2 className="text-center text-2xl font-light text-white">Frequently Asked Questions</h2>
         <div className="mt-10 space-y-6">
           {faqs.map((faq) => (
             <div key={faq.q} className="rounded-2xl border border-white/5 bg-[#121216] p-6">
@@ -67,14 +116,6 @@ export default function HowItWorksPage() {
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="mt-16 text-center">
-        <Link href="/apply">
-          <Button className="h-12 rounded-full bg-[#2DD4BF] px-8 text-base font-medium text-black hover:bg-[#5EEAD4]">
-            Apply Now
-          </Button>
-        </Link>
       </div>
     </div>
   )
