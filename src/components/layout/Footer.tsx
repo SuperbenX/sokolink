@@ -11,6 +11,10 @@ const footerLinks = {
     { href: "/apply", label: "Apply to Partner" },
     { href: "/products", label: "Browse Products" },
   ],
+  Legal: [
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/privacy", label: "Privacy Policy" },
+  ],
   Support: [
     { href: "/contact", label: "Help Center" },
     { href: "/contact", label: "WhatsApp Support" },
