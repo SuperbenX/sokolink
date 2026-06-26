@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import { ShareButtons } from "@/components/products/ShareButtons"
+import { ArrowLeft, MessageCircle } from "lucide-react"
 import { getProductById } from "@/lib/supabase/queries"
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,9 +16,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const wholesale = product.wholesale_price || product.price_usd
-  const shareUrl = `https://sokolink-x.vercel.app/products/${product.id}`
-  const shareText = `Check out ${product.name} on SokoLink! Wholesale from $${wholesale.toFixed(2)}.`
+  const waUrl = `https://wa.me/8613316895078?text=${encodeURIComponent(`Hi SokoLink! I'm interested in ${product.name} (${product.category}). Please send me pricing and availability.`)}`
 
   return (
     <div className="px-6 py-24">
@@ -43,25 +40,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <p className="mt-4 text-base leading-relaxed text-white/60">{product.description}</p>
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <p className="text-xs text-white/40">WHOLESALE PRICE</p>
-                  <p className="mt-1 text-3xl font-light text-[#2DD4BF]">${wholesale.toFixed(2)}</p>
-                </div>
-                {product.wholesale_price && (
-                  <div className="text-right">
-                    <p className="text-xs text-white/40">RETAIL PRICE</p>
-                    <p className="mt-1 text-lg text-white/40 line-through">${Number(product.price_usd).toFixed(2)}</p>
-                  </div>
-                )}
-              </div>
+              <p className="text-sm text-white/40">Pricing &amp; Availability</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/60">
+                Contact us via WhatsApp for wholesale pricing, bulk discounts, and stock availability.
+              </p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer">
+                <Button className="mt-4 w-full rounded-full bg-[#2DD4BF] text-black hover:bg-[#5EEAD4] h-12 text-base">
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  Inquire on WhatsApp
+                </Button>
+              </a>
             </div>
 
-            <div className="mt-6 space-y-4">
-              <p className="text-sm text-white/30">
-                Wholesale pricing for resellers. Contact us via WhatsApp to place an order or visit our warehouse for pickup.
-              </p>
-              <ShareButtons url={shareUrl} text={shareText} productName={product.name} />
+            <div className="mt-6 text-sm text-white/30 space-y-2">
+              <p>• Wholesale pricing for resellers &amp; creators</p>
+              <p>• Bulk discounts available</p>
+              <p>• Pickup from Harare warehouse or delivery</p>
             </div>
           </div>
         </div>
